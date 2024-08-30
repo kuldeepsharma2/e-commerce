@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteField } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { db } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function CartPage() {
   const [cartItems, setCartItems] = useState([]);
@@ -15,7 +17,8 @@ function CartPage() {
 
   useEffect(() => {
     if (!user) {
-      console.log('User is not authenticated');
+      // console.log('User is not authenticated');
+      navigate('/login');
       return;
     }
 
@@ -23,58 +26,44 @@ function CartPage() {
       try {
         const cartDoc = await getDoc(doc(db, 'carts', user.uid));
         if (cartDoc.exists()) {
-          console.log('Cart Document:', cartDoc.data());
           const cartData = cartDoc.data();
           const items = Object.values(cartData).filter(item => item && item.id);
-          console.log('Cart Items:', items);
+         // console.log('Fetched cart items:', items); // Log items to verify uniqueness
+          setCartItems(items);
 
-          // Remove the filtering for enrolled products
-          // const enrolledProductsRef = doc(db, 'users', user.uid);
-          // const enrolledProductsDoc = await getDoc(enrolledProductsRef);
-          // const enrolledProductsData = enrolledProductsDoc.exists() ? enrolledProductsDoc.data().products || [] : [];
-          // const enrolledProductIds = new Set(enrolledProductsData.map(product => product.id));
-          // console.log('Enrolled Product IDs:', enrolledProductIds);
-          // const filteredItems = items.filter(item => !enrolledProductIds.has(item.id));
-          const filteredItems = items;
-
-          setCartItems(filteredItems);
-
-          const total = filteredItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0);
+          const total = items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0);
           setTotalAmount(total);
         } else {
-          console.log('No cart document found');
+          //console.log('No cart document found');
         }
       } catch (error) {
-        console.error('Error fetching cart items:', error);
+        //console.error('Error fetching cart items:', error);
       }
     };
 
     fetchCartItems();
-  }, [user]);
+  }, [user, navigate]);
 
   const handleRemoveFromCart = async (itemId) => {
     if (!user) {
-      console.log('User is not authenticated');
+     // console.log('User is not authenticated');
       return;
     }
 
     try {
       const cartRef = doc(db, 'carts', user.uid);
       await updateDoc(cartRef, {
-        [itemId]: null
+        [itemId]: deleteField()
       });
 
-      // Update cart state directly
-      const updatedCartDoc = await getDoc(cartRef);
-      const updatedCartData = updatedCartDoc.data();
-      const updatedItems = Object.values(updatedCartData || {}).filter(item => item && item.id);
-      console.log('Updated Cart Items:', updatedItems);
+      setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
+      const updatedTotal = cartItems.reduce((sum, item) => item.id !== itemId ? sum + (item.price || 0) * (item.quantity || 0) : sum, 0);
+      setTotalAmount(updatedTotal);
 
-      const total = updatedItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0);
-      setCartItems(updatedItems);
-      setTotalAmount(total);
+      toast.success('Item removed from cart');
     } catch (error) {
-      console.error('Error removing item from cart:', error);
+     // console.error('Error removing item from cart:', error);
+      toast.error('Error removing item from cart');
     }
   };
 
@@ -85,7 +74,6 @@ function CartPage() {
     }
 
     try {
-      // Add all items from cart to enrolled products
       const enrolledProductsRef = doc(db, 'users', user.uid);
       const enrolledProductsDoc = await getDoc(enrolledProductsRef);
       const existingProducts = enrolledProductsDoc.exists() ? enrolledProductsDoc.data().products || [] : [];
@@ -99,12 +87,20 @@ function CartPage() {
       await updateDoc(enrolledProductsRef, { products: newProducts });
 
       // Clear the cart
-      await clearCart();
+      await updateDoc(doc(db, 'carts', user.uid), {
+        ...Object.fromEntries(cartItems.map(item => [item.id, deleteField()])),
+      });
 
-      // Navigate to the User Dashboard
+      setCartItems([]);
+      setTotalAmount(0);
+
+      clearCart();
+
+      toast.success('Products purchased successfully');
       navigate('/dashboard');
     } catch (error) {
       console.error('Error enrolling products:', error);
+      toast.error('Error purchasing products');
     }
   };
 
@@ -117,8 +113,8 @@ function CartPage() {
       <h1 className="text-2xl font-bold mb-4">Your Cart</h1>
       {cartItems.length > 0 ? (
         <div className="-mx-4">
-          {cartItems.map((item) => (
-            <div key={item.id} className="flex flex-col sm:flex-row bg-white shadow-lg rounded-lg mb-4 p-4 mx-4">
+          {cartItems.map((item, index) => (
+            <div key={item.id || index} className="flex flex-col sm:flex-row bg-white shadow-lg rounded-lg mb-4 p-4 mx-4">
               <div className="flex-shrink-0 mb-4 sm:mb-0 sm:w-1/3">
                 {item.image && (
                   <img
@@ -155,6 +151,7 @@ function CartPage() {
       ) : (
         <p>Your cart is empty.</p>
       )}
+      <ToastContainer />
     </div>
   );
 }

@@ -8,12 +8,15 @@ const HistoryDashboard = ({ products, onDeleteProduct }) => {
         <p>No products found.</p>
       ) : (
         <ul>
-          {products.map(product => (
-            <li key={product.id} className="mb-4 p-4 border rounded">
+          {products.map((product, index) => (
+            <li
+              key={`${product.id}-${index}-${product.timestamp}`}
+              className="mb-4 p-4 border rounded"
+            >
               <h3 className="text-lg font-semibold">{product.title}</h3>
               <p>{product.description}</p>
               <button
-                onClick={() => onDeleteProduct(product.id)}
+                onClick={() => onDeleteProduct(product.id, index, product.timestamp)}
                 className="mt-2 bg-red-500 text-white px-4 py-2 rounded"
               >
                 Delete History

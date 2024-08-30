@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { doc, onSnapshot, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, getDoc, deleteField } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from '../firebase';
 
@@ -46,7 +46,6 @@ export const CartProvider = ({ children }) => {
 
       if (cartData) {
         updatedCart = Object.values(cartData);
-        console.log('Current Cart Items:', updatedCart);
         const existingItemIndex = updatedCart.findIndex(cartItem => cartItem.id === item.id);
 
         if (existingItemIndex > -1) {
@@ -65,8 +64,30 @@ export const CartProvider = ({ children }) => {
         return acc;
       }, {});
 
-      console.log('Updating Cart Document:', cartObject);
-      await updateDoc(cartRef, cartObject);
+      try {
+        await updateDoc(cartRef, cartObject);
+      } catch (error) {
+        console.error('Error updating cart:', error);
+      }
+    }
+  };
+
+  const removeItemFromCart = async (itemId) => {
+    const user = auth.currentUser;
+
+    if (user) {
+      const cartRef = doc(db, 'carts', user.uid);
+
+      try {
+        await updateDoc(cartRef, {
+          [itemId]: deleteField()
+        });
+
+        // Update local state
+        setCart(prevCart => prevCart.filter(item => item.id !== itemId));
+      } catch (error) {
+        console.error('Error removing item from cart:', error);
+      }
     }
   };
 
@@ -75,14 +96,17 @@ export const CartProvider = ({ children }) => {
 
     if (user) {
       const cartRef = doc(db, 'carts', user.uid);
-      await updateDoc(cartRef, {});
-      setCart([]);
-      console.log('Cart cleared');
+      try {
+        await updateDoc(cartRef, {});
+        setCart([]);
+      } catch (error) {
+        console.error('Error clearing cart:', error);
+      }
     }
   };
 
   return (
-    <CartContext.Provider value={{ cart, addItemToCart, clearCart }}>
+    <CartContext.Provider value={{ cart, addItemToCart, removeItemFromCart, clearCart }}>
       {children}
     </CartContext.Provider>
   );

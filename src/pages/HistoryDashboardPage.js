@@ -4,7 +4,35 @@ import { doc, onSnapshot, updateDoc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { db } from '../firebase';
 import { setEnrolledProducts } from '../store/ProductSlice'; // Ensure correct slice
-import HistoryDashboard from '../components/HistoryDashboard';
+
+const HistoryDashboard = ({ products, onDeleteProduct }) => {
+  return (
+    <div>
+      <h2 className="text-xl font-bold mb-4">Your Product History</h2>
+      {products.length === 0 ? (
+        <p>No products found.</p>
+      ) : (
+        <ul>
+          {products.map((product) => (
+            <li
+              key={`${product.id}-${product.timestamp}`} // Ensure unique key
+              className="mb-4 p-4 border rounded"
+            >
+              <h3 className="text-lg font-semibold">{product.title}</h3>
+              <p>{product.description}</p>
+              <button
+                onClick={() => onDeleteProduct(product.id)}
+                className="mt-2 bg-red-500 text-white px-4 py-2 rounded"
+              >
+                Delete History
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 const HistoryDashboardPage = () => {
   const dispatch = useDispatch();
@@ -39,6 +67,7 @@ const HistoryDashboardPage = () => {
     try {
       const userRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userRef);
+
       if (userDoc.exists()) {
         const products = userDoc.data()?.products || [];
         const updatedProducts = products.map(product =>
@@ -47,6 +76,7 @@ const HistoryDashboardPage = () => {
 
         await updateDoc(userRef, { products: updatedProducts });
 
+        // Filter out the deleted product from the local state
         const filteredProducts = enrolledProducts.filter(product => product.id !== productId);
         dispatch(setEnrolledProducts(filteredProducts));
 

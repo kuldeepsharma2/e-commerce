@@ -30,7 +30,7 @@ function App() {
               <Route path="/cart" element={<CartPage />} />
               <Route path="/dashboard" element={
                 <PrivateRoute>
-                  <HistoryDashboardPage />
+                 <HistoryDashboardPage />
                 </PrivateRoute>
               } />
             </Routes>

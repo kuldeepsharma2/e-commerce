@@ -47,9 +47,7 @@ const HistoryDashboardPage = () => {
       const filteredProducts = enrolledProducts.filter(product => product.productBuyId !== productBuyId);
       dispatch(setEnrolledProducts(filteredProducts));
 
-      setTimeout(() => {
-        toast.success('Product history deleted successfully.');
-      }, 5000);
+      toast.success('Product history deleted successfully.');
 
     } catch (error) {
       console.error('Error deleting product history:', error);

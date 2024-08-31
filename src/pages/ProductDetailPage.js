@@ -84,39 +84,39 @@ function ProductDetailPage() {
   };
 
   if (!product) {
-    return <div>No product details available.</div>;
+    return <div className="text-center p-4">No product details available.</div>;
   }
 
   return (
-    <div className="container mx-auto mt-8">
-      <h1 className="text-2xl font-bold mb-4">{product.title}</h1>
+    <div className="container mx-auto mt-8 p-4 sm:p-6 md:p-8 lg:p-10">
+      <h1 className="text-2xl font-bold mb-4 text-center sm:text-left">{product.title}</h1>
       {product.image && (
         <img
           src={product.image}
           alt={product.title}
-          className="w-full h-[60%] object-contain mb-4 rounded-md"
+          className="w-full h-auto object-contain mb-4 rounded-md"
         />
       )}
-      <div className="tabs">
-        <button className="tab-button">Specifications</button>
-        <button className="tab-button">Price</button>
-        <button className="tab-button">Reviews</button>
+      <div className="tabs mb-4">
+        <button className="tab-button w-full sm:w-auto">Specifications</button>
+        <button className="tab-button w-full sm:w-auto">Price</button>
+        <button className="tab-button w-full sm:w-auto">Reviews</button>
       </div>
       <div className="tab-content">
-        <div className="tab-pane active">
-          <h2>Specifications</h2>
+        <div className="tab-pane active mb-4">
+          <h2 className="text-lg font-semibold mb-2">Specifications</h2>
           <p>{product.specifications}</p>
         </div>
-        <div className="tab-pane">
-          <h2>Price</h2>
-          <p>${product.price}</p>
+        <div className="tab-pane mb-4">
+          <h2 className="text-lg font-semibold mb-2">Price</h2>
+          <p className="text-green-600 text-xl font-bold">${product.price}</p>
         </div>
         <div className="tab-pane">
-          <h2>Reviews</h2>
+          <h2 className="text-lg font-semibold mb-2">Reviews</h2>
           {reviews.length > 0 ? (
-            <ul>
+            <ul className="space-y-2">
               {reviews.map((review, index) => (
-                <li key={index} className="review-item">
+                <li key={index} className="review-item bg-gray-100 p-4 rounded-md">
                   <p><strong>{review.userEmail}:</strong> {review.review}</p>
                 </li>
               ))}
@@ -125,15 +125,15 @@ function ProductDetailPage() {
             <p>No reviews yet.</p>
           )}
           {user && (
-            <form onSubmit={handleReviewSubmit} className="review-form">
+            <form onSubmit={handleReviewSubmit} className="review-form mt-4">
               <textarea
                 value={review}
                 onChange={(e) => setReview(e.target.value)}
                 placeholder="Write your review here"
                 required
-                className="border p-2 w-full"
+                className="border p-2 w-full rounded-md"
               />
-              <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2">
+              <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2 w-full sm:w-auto">
                 Submit Review
               </button>
             </form>
@@ -148,12 +148,12 @@ function ProductDetailPage() {
           value={quantity}
           onChange={(e) => setQuantity(Number(e.target.value))}
           min="1"
-          className="border p-2 w-20"
+          className="border p-2 w-full sm:w-20 rounded-md"
         />
         <div className="mt-4 flex items-center justify-center">
           <button
             onClick={handleBuyNow}
-            className="bg-green-500 text-white px-4 py-2 rounded-lg"
+            className="bg-green-500 text-white px-4 py-2 rounded-lg w-full sm:w-auto"
           >
             Buy Now
           </button>

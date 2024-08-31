@@ -135,30 +135,30 @@ function ProductListingPage() {
   };
 
   return (
-    <div className="container mx-auto mt-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="container mx-auto px-4 py-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {currentProducts.map((product) => (
           <div
             key={product.id}
-            className="border rounded-lg p-4 shadow-lg flex flex-col justify-between relative"
+            className="border rounded-lg p-4 shadow-lg flex flex-col justify-between bg-white"
           >
             {product.image && (
               <img
                 src={product.image}
                 alt={product.title}
-                className="w-full h-[60%] object-contain mb-4 rounded-md cursor-pointer"
+                className="w-full h-48 object-cover mb-4 rounded-md cursor-pointer"
                 onClick={() => handleProductClick(product)}
               />
             )}
-            <div className="p-3 flex-1">
+            <div className="flex-1">
               <h2
-                className="text-xl font-semibold cursor-pointer"
+                className="text-lg font-semibold cursor-pointer"
                 onClick={() => handleProductClick(product)}
               >
                 {product.title}
               </h2>
               <p
-                className="line-clamp-3 mt-2 cursor-pointer"
+                className="text-gray-600 mt-2 line-clamp-2 cursor-pointer"
                 onClick={() => handleProductClick(product)}
               >
                 {product.description}
@@ -167,12 +167,12 @@ function ProductListingPage() {
             <div className="mt-3">
               <p className="text-center font-semibold">Price: ${product.price}</p>
             </div>
-            <div className="flex items-center justify-center mt-4">
+            <div className="flex flex-col sm:flex-row items-center mt-4">
               <input
                 type="number"
                 value={quantity[product.id] || 1}
                 onChange={(e) => handleQuantityChange(product.id, e)}
-                className="w-16 text-center border rounded px-2 py-1"
+                className="w-16 text-center border rounded px-2 py-1 mb-2 sm:mb-0 sm:mr-2"
                 style={{ pointerEvents: 'all' }} // Ensure pointer events on input
               />
               <button
@@ -180,7 +180,7 @@ function ProductListingPage() {
                   e.stopPropagation(); // Prevent click event from bubbling up
                   handleBuyNow(product);
                 }}
-                className="bg-green-500 text-white px-4 py-2 rounded-lg ml-2"
+                className="bg-green-500 text-white px-4 py-2 rounded-lg"
               >
                 {isProductInCart(product.id) ? 'Update Cart' : 'Buy Now'}
               </button>
@@ -189,7 +189,7 @@ function ProductListingPage() {
         ))}
       </div>
       {products.length > productsPerPage && (
-        <div className="flex justify-center mt-4">
+        <div className="flex justify-center mt-6">
           <button
             onClick={() => paginate(currentPage - 1)}
             disabled={currentPage === 1}

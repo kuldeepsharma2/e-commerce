@@ -111,7 +111,7 @@ function CartPage() {
       // Redirect after a delay
       setTimeout(() => {
         navigate('/dashboard');
-      }, 5000); // 30 seconds delay
+      }, 5000); // 5 seconds delay
 
     } catch (error) {
       console.error('Error purchasing products:', error);
@@ -124,49 +124,47 @@ function CartPage() {
   }
 
   return (
-    <div className="container mx-auto mt-8">
-      <h1 className="text-2xl font-bold mb-4">Your Cart</h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-4 text-center">Your Cart</h1>
       {cartItems.length > 0 ? (
-        <div className="-mx-4">
+        <div className="flex flex-col gap-4">
           {cartItems.map((item, index) => (
-            <div key={item.id || index} className="flex flex-col sm:flex-row bg-white shadow-lg rounded-lg mb-4 p-4 mx-4">
+            <div key={item.id || index} className="flex flex-col sm:flex-row bg-white shadow-lg rounded-lg p-4">
               <div className="flex-shrink-0 mb-4 sm:mb-0 sm:w-1/3">
                 {item.image && (
                   <img
                     src={item.image}
                     alt={item.title}
-                    className="w-full h-[60%] object-contain rounded-md"
+                    className="w-full h-40 object-cover rounded-md"
                   />
                 )}
               </div>
               <div className="flex-1 sm:ml-4">
-                <h2 className="text-xl font-semibold mb-2">{item.title}</h2>
+                <h2 className="text-lg font-semibold mb-2">{item.title}</h2>
                 <p className="mb-2">{item.description}</p>
                 <p className="text-gray-500 mb-2">Price: ${item.price}</p>
                 <p className="text-gray-500 mb-4">Quantity: {item.quantity}</p>
                 <button
                   onClick={() => handleRemoveFromCart(item.id)}
-                  className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition mr-2"
+                  className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
                 >
                   Remove from Cart
                 </button>
-               
               </div>
             </div>
           ))}
-          <div className="flex flex-col items-center mt-4">
-  <h2 className="text-xl font-bold text-center">Total Amount: ${totalAmount}</h2>
-  <button
-    onClick={handleBuyNow}
-    className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition mt-4"
-  >
-    Buy Now
-  </button>
-</div>
-
+          <div className="flex flex-col items-center mt-4 gap-4">
+            <h2 className="text-xl font-bold">Total Amount: ${totalAmount}</h2>
+            <button
+              onClick={handleBuyNow}
+              className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
+            >
+              Buy Now
+            </button>
+          </div>
         </div>
       ) : (
-        <p>Your cart is empty.</p>
+        <p className="text-center">Your cart is empty.</p>
       )}
       <ToastContainer />
     </div>

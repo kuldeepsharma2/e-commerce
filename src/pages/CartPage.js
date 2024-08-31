@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc, deleteField } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteField, writeBatch } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { db } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { v4 as uuidv4 } from 'uuid';
 
 function CartPage() {
   const [cartItems, setCartItems] = useState([]);
@@ -17,7 +18,6 @@ function CartPage() {
 
   useEffect(() => {
     if (!user) {
-      // console.log('User is not authenticated');
       navigate('/login');
       return;
     }
@@ -28,16 +28,14 @@ function CartPage() {
         if (cartDoc.exists()) {
           const cartData = cartDoc.data();
           const items = Object.values(cartData).filter(item => item && item.id);
-         // console.log('Fetched cart items:', items); // Log items to verify uniqueness
           setCartItems(items);
 
           const total = items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0);
           setTotalAmount(total);
-        } else {
-          //console.log('No cart document found');
         }
       } catch (error) {
-        //console.error('Error fetching cart items:', error);
+        console.error('Error fetching cart items:', error);
+        toast.error('Error fetching cart items');
       }
     };
 
@@ -46,14 +44,13 @@ function CartPage() {
 
   const handleRemoveFromCart = async (itemId) => {
     if (!user) {
-     // console.log('User is not authenticated');
       return;
     }
 
     try {
       const cartRef = doc(db, 'carts', user.uid);
       await updateDoc(cartRef, {
-        [itemId]: deleteField()
+        [itemId]: deleteField(),
       });
 
       setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
@@ -62,7 +59,7 @@ function CartPage() {
 
       toast.success('Item removed from cart');
     } catch (error) {
-     // console.error('Error removing item from cart:', error);
+      console.error('Error removing item from cart:', error);
       toast.error('Error removing item from cart');
     }
   };
@@ -73,23 +70,36 @@ function CartPage() {
       return;
     }
 
+    if (cartItems.length === 0) {
+      toast.error('Your cart is empty.');
+      return;
+    }
+
     try {
-      const enrolledProductsRef = doc(db, 'users', user.uid);
-      const enrolledProductsDoc = await getDoc(enrolledProductsRef);
-      const existingProducts = enrolledProductsDoc.exists() ? enrolledProductsDoc.data().products || [] : [];
+      const batch = writeBatch(db);
 
-      const newProducts = [...existingProducts, ...cartItems.map(item => ({
-        id: item.id,
-        title: item.title,
-        description: item.description,
-        image: item.image
-      }))];
-      await updateDoc(enrolledProductsRef, { products: newProducts });
+      cartItems.forEach((item) => {
+        const productBuyId = uuidv4(); // Generate a unique ID for the purchased product
+        const productRef = doc(db, 'buyed-products', productBuyId);
 
-      // Clear the cart
-      await updateDoc(doc(db, 'carts', user.uid), {
-        ...Object.fromEntries(cartItems.map(item => [item.id, deleteField()])),
+        batch.set(productRef, {
+          productBuyId,
+          userId: user.uid,
+          productId: item.id, // Add the productId to the purchased product data
+          buyProductVisibleStatus: true, // Add the buyProductVisibleStatus field
+          ...item,
+          timestamp: new Date().toISOString(),
+        });
       });
+
+      const cartRef = doc(db, 'carts', user.uid);
+      cartItems.forEach(item => {
+        batch.update(cartRef, {
+          [item.id]: deleteField(),
+        });
+      });
+
+      await batch.commit();
 
       setCartItems([]);
       setTotalAmount(0);
@@ -97,9 +107,14 @@ function CartPage() {
       clearCart();
 
       toast.success('Products purchased successfully');
-      navigate('/dashboard');
+
+      // Redirect after a delay
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 10000); // 30 seconds delay
+
     } catch (error) {
-      console.error('Error enrolling products:', error);
+      console.error('Error purchasing products:', error);
       toast.error('Error purchasing products');
     }
   };

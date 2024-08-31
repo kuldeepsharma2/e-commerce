@@ -1,103 +1,69 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { doc, onSnapshot, updateDoc, getDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { db } from '../firebase';
-import { setEnrolledProducts } from '../store/ProductSlice'; // Ensure correct slice
-
-const HistoryDashboard = ({ products, onDeleteProduct }) => {
-  return (
-    <div>
-      <h2 className="text-xl font-bold mb-4">Your Product History</h2>
-      {products.length === 0 ? (
-        <p>No products found.</p>
-      ) : (
-        <ul>
-          {products.map((product) => (
-            <li
-              key={`${product.id}-${product.timestamp}`} // Ensure unique key
-              className="mb-4 p-4 border rounded"
-            >
-              <h3 className="text-lg font-semibold">{product.title}</h3>
-              <p>{product.description}</p>
-              <button
-                onClick={() => onDeleteProduct(product.id)}
-                className="mt-2 bg-red-500 text-white px-4 py-2 rounded"
-              >
-                Delete History
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-};
+import { setEnrolledProducts } from '../store/ProductSlice';
+import HistoryDashboard from '../components/HistoryDashboard';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const HistoryDashboardPage = () => {
   const dispatch = useDispatch();
-  const enrolledProducts = useSelector((state) => state.products.enrolledProducts); // Ensure correct state name
+  const enrolledProducts = useSelector((state) => state.products.enrolledProducts);
   const auth = getAuth();
   const user = auth.currentUser;
 
   useEffect(() => {
     if (user) {
-      const userRef = doc(db, 'users', user.uid);
+      const productsRef = collection(db, 'buyed-products');
+      const q = query(productsRef, where('userId', '==', user.uid), where('buyProductVisibleStatus', '==', true));
 
-      const unsubscribe = onSnapshot(userRef, (doc) => {
-        const data = doc.data();
-        if (data) {
-          const productData = data.products || [];
-          console.log('Fetched products:', productData); // Debugging line
-          dispatch(setEnrolledProducts(productData));
-        } else {
-          console.log('No data found for this user.');
-        }
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const products = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            ...data,
+            duration: data.duration ? data.duration.toDate().toISOString() : null, // Convert Timestamp to ISO string
+            createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : null, // Ensure all Timestamps are converted
+          };
+        });
+        dispatch(setEnrolledProducts(products));
       }, (error) => {
-        console.error('Error fetching user data:', error);
+        console.error('Error fetching purchased products:', error);
       });
 
       return () => unsubscribe();
     }
   }, [dispatch, user]);
 
-  const handleDeleteProduct = async (productId) => {
+  const handleDeleteProduct = async (productBuyId) => {
     if (!user) return;
 
     try {
-      const userRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userRef);
+      const productRef = doc(db, 'buyed-products', productBuyId);
+      await updateDoc(productRef, { buyProductVisibleStatus: false });
 
-      if (userDoc.exists()) {
-        const products = userDoc.data()?.products || [];
-        const updatedProducts = products.map(product =>
-          product.id === productId ? { ...product, deleted: true } : product
-        );
+      const filteredProducts = enrolledProducts.filter(product => product.productBuyId !== productBuyId);
+      dispatch(setEnrolledProducts(filteredProducts));
 
-        await updateDoc(userRef, { products: updatedProducts });
+      setTimeout(() => {
+        toast.success('Product history deleted successfully.');
+      }, 5000);
 
-        // Filter out the deleted product from the local state
-        const filteredProducts = enrolledProducts.filter(product => product.id !== productId);
-        dispatch(setEnrolledProducts(filteredProducts));
-
-        alert('Product history deleted.');
-      } else {
-        console.log('No user document found.');
-      }
     } catch (error) {
       console.error('Error deleting product history:', error);
-      alert('Failed to delete product history. Please try again.');
+      toast.error('Failed to delete product history. Please try again.');
     }
   };
-
-  console.log('Enrolled products in state:', enrolledProducts); // Debugging line
 
   return (
     <div className="container mx-auto mt-8">
       <HistoryDashboard
-        products={enrolledProducts} // Ensure correct prop name
+        products={enrolledProducts}
         onDeleteProduct={handleDeleteProduct}
       />
+      <ToastContainer />
     </div>
   );
 };

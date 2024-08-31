@@ -111,7 +111,7 @@ function CartPage() {
       // Redirect after a delay
       setTimeout(() => {
         navigate('/dashboard');
-      }, 6000); // 30 seconds delay
+      }, 5000); // 30 seconds delay
 
     } catch (error) {
       console.error('Error purchasing products:', error);

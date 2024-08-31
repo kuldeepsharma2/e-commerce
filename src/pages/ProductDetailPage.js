@@ -1,38 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { doc, setDoc, getDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { addDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getAuth } from 'firebase/auth';
+import { useCart } from '../contexts/CartContext';
 
 function ProductDetailPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const auth = getAuth();
   const user = auth.currentUser;
+  const { addItemToCart } = useCart();
 
   const { product } = location.state || {};
-  const [isInCart, setIsInCart] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const [review, setReview] = useState('');
   const [reviews, setReviews] = useState([]);
-  
-  useEffect(() => {
-    const checkCart = async () => {
-      if (user && product) {
-        try {
-          const cartRef = doc(db, 'carts', user.uid);
-          const cartDoc = await getDoc(cartRef);
-          if (cartDoc.exists()) {
-            const cartItems = cartDoc.data();
-            setIsInCart(cartItems && cartItems[product.id] ? true : false);
-          }
-        } catch (error) {
-          console.error('Error checking cart:', error);
-        }
-      }
-    };
-
-    checkCart();
-  }, [user, product]);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -59,13 +42,10 @@ function ProductDetailPage() {
     }
 
     try {
-      await setDoc(doc(db, 'carts', user.uid), {
-        [product.id]: {
-          ...product,
-          quantity: 1,
-        },
-      }, { merge: true });
-
+      await addItemToCart({
+        ...product,
+        quantity,
+      });
       alert('Item added to cart!');
       navigate('/cart');
     } catch (error) {
@@ -160,17 +140,24 @@ function ProductDetailPage() {
           )}
         </div>
       </div>
-      <div className="mt-4 flex items-center justify-center">
-        {isInCart ? (
-          <p className="text-red-500 font-semibold">Item already in cart</p>
-        ) : (
+      <div className="mt-4">
+        <label htmlFor="quantity" className="block text-lg font-semibold mb-2">Quantity:</label>
+        <input
+          id="quantity"
+          type="number"
+          value={quantity}
+          onChange={(e) => setQuantity(Number(e.target.value))}
+          min="1"
+          className="border p-2 w-20"
+        />
+        <div className="mt-4 flex items-center justify-center">
           <button
             onClick={handleBuyNow}
             className="bg-green-500 text-white px-4 py-2 rounded-lg"
           >
             Buy Now
           </button>
-        )}
+        </div>
       </div>
     </div>
   );

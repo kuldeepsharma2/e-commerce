@@ -111,7 +111,7 @@ function CartPage() {
       // Redirect after a delay
       setTimeout(() => {
         navigate('/dashboard');
-      }, 10000); // 30 seconds delay
+      }, 6000); // 30 seconds delay
 
     } catch (error) {
       console.error('Error purchasing products:', error);
@@ -150,18 +150,20 @@ function CartPage() {
                 >
                   Remove from Cart
                 </button>
-                <button
-                  onClick={handleBuyNow}
-                  className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
-                >
-                  Buy Now
-                </button>
+               
               </div>
             </div>
           ))}
-          <div className="justify-between items-center mt-4">
-            <h2 className="text-xl font-bold text-center">Total Amount: ${totalAmount}</h2>
-          </div>
+          <div className="flex flex-col items-center mt-4">
+  <h2 className="text-xl font-bold text-center">Total Amount: ${totalAmount}</h2>
+  <button
+    onClick={handleBuyNow}
+    className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition mt-4"
+  >
+    Buy Now
+  </button>
+</div>
+
         </div>
       ) : (
         <p>Your cart is empty.</p>

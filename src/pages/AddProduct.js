@@ -13,14 +13,16 @@ function AddProduct() {
   const [enrollmentStatus, setEnrollmentStatus] = useState('Available');
   const [schedule, setSchedule] = useState('');
   const [location, setLocation] = useState('');
-  const [tags, setTags] = useState(''); // New state for tags
+  const [tags, setTags] = useState('');
   const [price, setPrice] = useState('');
   const [image, setImage] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [category, setCategory] = useState('');
+
   const auth = getAuth();
   const user = auth.currentUser;
-  const navigate = useNavigate(); // Add navigate hook
+  const navigate = useNavigate();
 
   const handleImageUpload = (file) => {
     return new Promise((resolve, reject) => {
@@ -53,7 +55,7 @@ function AddProduct() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title || !instructor || !description || !price || !schedule || !location || !image || !tags) {
+    if (!title || !instructor || !description || !price || !schedule || !location || !image || !tags || !category) {
       setError('All required fields must be filled out!');
       toast.error('All required fields must be filled out!');
       return;
@@ -70,19 +72,19 @@ function AddProduct() {
         instructor,
         description,
         enrollmentStatus,
-        duration: serverTimestamp(), // Auto-generating date and time
+        duration: serverTimestamp(),
         schedule,
         location,
-        tags: tags.split(',').map(tag => tag.trim()), // Convert tags string to array
+        tags: tags.split(',').map(tag => tag.trim()),
         price,
         createdBy: user.email,
         createdAt: serverTimestamp(),
         image: imageUrl,
+        category
       };
 
       await addDoc(collection(db, 'products'), productData);
 
-      // Reset form fields
       setTitle('');
       setInstructor('');
       setDescription('');
@@ -92,13 +94,10 @@ function AddProduct() {
       setTags('');
       setPrice('');
       setImage(null);
+      setCategory('');
       setUploading(false);
 
-      
-
-      // Navigate to the Product Listing Page
-      navigate('/'); // Adjust the path as needed
-      // Display success toast notification
+      navigate('/');
       toast.success('Product added successfully!');
 
     } catch (error) {
@@ -168,6 +167,38 @@ function AddProduct() {
           onChange={(e) => setTags(e.target.value)}
           className="border p-2 mb-2 w-full"
         />
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="border p-2 mb-2 w-full"
+          required
+        >
+          <option value="">Select Category</option>
+          {/* Add other categories as needed */}
+          <option value="Electronics">Electronics</option>
+          <option value="Books">Books</option>
+          <option value="Clothing">Clothing</option>
+          <option value="Home & Kitchen">Home & Kitchen</option>
+          <option value="Sports">Sports</option>
+          <option value="Toys">Toys</option>
+          <option value="Health & Beauty">Health & Beauty</option>
+          <option value="Automotive">Automotive</option>
+          <option value="Furniture">Furniture</option>
+          <option value="Jewelry">Jewelry</option>
+          <option value="Computers">Computers</option>
+          <option value="Garden">Garden</option>
+          <option value="Office Supplies">Office Supplies</option>
+          <option value="Pet Supplies">Pet Supplies</option>
+          <option value="Music">Music</option>
+          <option value="Movies">Movies</option>
+          <option value="Video Games">Video Games</option>
+          <option value="Baby Products">Baby Products</option>
+          <option value="Handmade">Handmade</option>
+          <option value="Arts & Crafts">Arts & Crafts</option>
+          <option value="Personal Care">Personal Care</option>
+          <option value="Stationery">Stationery</option>
+          <option value="Grocery">Grocery</option>
+        </select>
         <input
           type="number"
           placeholder="Price"
@@ -178,7 +209,7 @@ function AddProduct() {
         />
         <input
           type="file"
-          accept="image/*" // Restrict to image files only
+          accept="image/*"
           onChange={(e) => setImage(e.target.files[0])}
           className="border p-2 mb-4 w-full"
           required

@@ -4,6 +4,8 @@ import { addDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getAuth } from 'firebase/auth';
 import { useCart } from '../contexts/CartContext';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function ProductDetailPage() {
   const location = useLocation();
@@ -46,17 +48,21 @@ function ProductDetailPage() {
         ...product,
         quantity,
       });
-      alert('Item added to cart!');
-      navigate('/cart');
+      toast.success('Item added to cart!');
+      // Delay the redirection by 7 seconds
+      setTimeout(() => {
+        navigate('/cart');
+      }, 7000);
     } catch (error) {
       console.error('Error adding item to cart:', error);
+      toast.error('Failed to add item to cart.');
     }
   };
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     if (!user || !review) {
-      alert('Please log in and provide a review.');
+      toast.error('Please log in and provide a review.');
       return;
     }
 
@@ -70,7 +76,7 @@ function ProductDetailPage() {
       });
 
       setReview('');
-      alert('Review submitted successfully!');
+      toast.success('Review submitted successfully!');
       // Fetch reviews again to include the new review
       const reviewsRef = collection(db, 'reviews');
       const q = query(reviewsRef, where('productId', '==', product.id));
@@ -79,7 +85,7 @@ function ProductDetailPage() {
       setReviews(reviewsList);
     } catch (error) {
       console.error('Error submitting review:', error);
-      alert('Failed to submit review. Please try again.');
+      toast.error('Failed to submit review. Please try again.');
     }
   };
 
@@ -159,6 +165,7 @@ function ProductDetailPage() {
           </button>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }

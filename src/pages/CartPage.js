@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { doc, getDoc, updateDoc, deleteField, writeBatch } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-import { db } from '../firebase';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
+import { getAuth } from 'firebase/auth';
+import { db } from '../firebase'; // Make sure this points to your firebase configuration
+import { doc, getDoc, updateDoc, deleteField, writeBatch } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { v4 as uuidv4 } from 'uuid';
+import { useCart } from '../contexts/CartContext'; // Assuming you have a CartContext
 
 function CartPage() {
   const [cartItems, setCartItems] = useState([]);
@@ -27,7 +27,10 @@ function CartPage() {
         const cartDoc = await getDoc(doc(db, 'carts', user.uid));
         if (cartDoc.exists()) {
           const cartData = cartDoc.data();
-          const items = Object.values(cartData).filter(item => item && item.id);
+          const items = Object.entries(cartData)
+            .filter(([key, item]) => item && item.id)
+            .map(([key, item]) => ({ cartItemId: key, ...item }));
+
           setCartItems(items);
 
           const total = items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0);
@@ -42,7 +45,7 @@ function CartPage() {
     fetchCartItems();
   }, [user, navigate]);
 
-  const handleRemoveFromCart = async (itemId) => {
+  const handleRemoveFromCart = async (cartItemId) => {
     if (!user) {
       return;
     }
@@ -50,11 +53,11 @@ function CartPage() {
     try {
       const cartRef = doc(db, 'carts', user.uid);
       await updateDoc(cartRef, {
-        [itemId]: deleteField(),
+        [cartItemId]: deleteField(),
       });
 
-      setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
-      const updatedTotal = cartItems.reduce((sum, item) => item.id !== itemId ? sum + (item.price || 0) * (item.quantity || 0) : sum, 0);
+      setCartItems(prevItems => prevItems.filter(item => item.cartItemId !== cartItemId));
+      const updatedTotal = cartItems.reduce((sum, item) => item.cartItemId !== cartItemId ? sum + (item.price || 0) * (item.quantity || 0) : sum, 0);
       setTotalAmount(updatedTotal);
 
       toast.success('Item removed from cart');
@@ -95,7 +98,7 @@ function CartPage() {
       const cartRef = doc(db, 'carts', user.uid);
       cartItems.forEach(item => {
         batch.update(cartRef, {
-          [item.id]: deleteField(),
+          [item.cartItemId]: deleteField(),
         });
       });
 
@@ -128,8 +131,8 @@ function CartPage() {
       <h1 className="text-2xl font-bold mb-4 text-center">Your Cart</h1>
       {cartItems.length > 0 ? (
         <div className="flex flex-col gap-4">
-          {cartItems.map((item, index) => (
-            <div key={item.id || index} className="flex flex-col sm:flex-row bg-white shadow-lg rounded-lg p-4">
+          {cartItems.map((item) => (
+            <div key={item.cartItemId} className="flex flex-col sm:flex-row bg-white shadow-lg rounded-lg p-4">
               <div className="flex-shrink-0 mb-4 sm:mb-0 sm:w-1/3">
                 {item.image && (
                   <img
@@ -145,7 +148,7 @@ function CartPage() {
                 <p className="text-gray-500 mb-2">Price: ${item.price}</p>
                 <p className="text-gray-500 mb-4">Quantity: {item.quantity}</p>
                 <button
-                  onClick={() => handleRemoveFromCart(item.id)}
+                  onClick={() => handleRemoveFromCart(item.cartItemId)}
                   className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
                 >
                   Remove from Cart

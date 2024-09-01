@@ -4,7 +4,7 @@ import { db } from '../firebase';
 import { getAuth } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Import the toast CSS
+import 'react-toastify/dist/ReactToastify.css';
 
 function ProductListingPage() {
   const [products, setProducts] = useState([]);
@@ -37,7 +37,7 @@ function ProductListingPage() {
           if (cartItemsDoc.exists()) {
             setCartItems(Object.values(cartItemsDoc.data() || {}));
           } else {
-            setCartItems([]); // Ensure cartItems is always an array
+            setCartItems([]);
           }
         } catch (error) {
           console.error('Error fetching cart items:', error);
@@ -50,9 +50,8 @@ function ProductListingPage() {
   }, [user]);
 
   useEffect(() => {
-    // Initialize quantity state for each product
     const initialQuantity = products.reduce((acc, product) => {
-      acc[product.id] = 1; // Default quantity is 1
+      acc[product.id] = 1;
       return acc;
     }, {});
     setQuantity(initialQuantity);
@@ -72,7 +71,7 @@ function ProductListingPage() {
         if (cartItemsDoc.exists()) {
           setCartItems(Object.values(cartItemsDoc.data() || {}));
         } else {
-          setCartItems([]); // Ensure cartItems is always an array
+          setCartItems([]);
         }
       } catch (error) {
         console.error('Error fetching cart items:', error);
@@ -91,31 +90,33 @@ function ProductListingPage() {
       const cartDoc = await getDoc(cartRef);
       const cartData = cartDoc.data() || {};
 
-      if (cartData[product.id]) {
-        // If the item is already in the cart, update the quantity
-        const updatedQuantity = (cartData[product.id].quantity || 0) + quantity[product.id];
+      const cartItemId = `cart_${product.id}_${new Date().getTime()}`;
+
+      if (cartData[cartItemId]) {
+        const updatedQuantity = (cartData[cartItemId].quantity || 0) + quantity[product.id];
         await setDoc(cartRef, {
-          [product.id]: {
+          [cartItemId]: {
             ...product,
             quantity: updatedQuantity,
+            cartItemId: cartItemId,
           },
         }, { merge: true });
       } else {
-        // If the item is not in the cart, add it
         await setDoc(cartRef, {
-          [product.id]: {
+          [cartItemId]: {
             ...product,
             quantity: quantity[product.id],
+            cartItemId: cartItemId,
           },
         }, { merge: true });
       }
 
-      toast.success('Item added to cart!'); // Show success toast
-      updateCartItems(); // Update cart items state
+      toast.success('Item added to cart!', { delay: 9000 }); // Show success toast with 9-second delay
+      updateCartItems();
       navigate('/cart');
     } catch (error) {
       console.error('Error adding item to cart:', error);
-      toast.error('Error adding item to cart'); // Show error toast
+      toast.error('Error adding item to cart', { delay: 9000 }); // Show error toast with 9-second delay
     }
   };
 
@@ -131,7 +132,7 @@ function ProductListingPage() {
   };
 
   const handleProductClick = (product) => {
-    navigate('/product-detail', { state: { product } }); // Navigate to product detail page with product data
+    navigate('/product-detail', { state: { product } });
   };
 
   return (
@@ -173,11 +174,11 @@ function ProductListingPage() {
                 value={quantity[product.id] || 1}
                 onChange={(e) => handleQuantityChange(product.id, e)}
                 className="w-16 text-center border rounded px-2 py-1 mb-2 sm:mb-0 sm:mr-2"
-                style={{ pointerEvents: 'all' }} // Ensure pointer events on input
+                style={{ pointerEvents: 'all' }}
               />
               <button
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent click event from bubbling up
+                  e.stopPropagation();
                   handleBuyNow(product);
                 }}
                 className="bg-green-500 text-white px-4 py-2 rounded-lg"
@@ -206,7 +207,7 @@ function ProductListingPage() {
           </button>
         </div>
       )}
-      <ToastContainer /> {/* Add ToastContainer to your JSX */}
+      <ToastContainer />
     </div>
   );
 }

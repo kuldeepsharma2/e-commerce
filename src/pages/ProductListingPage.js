@@ -111,12 +111,15 @@ function ProductListingPage() {
         }, { merge: true });
       }
 
-      toast.success('Item added to cart!', { delay: 9000 }); // Show success toast with 9-second delay
+      toast.success('Item added to cart!'); // Show success toast immediately
       updateCartItems();
-      navigate('/cart');
+
+      setTimeout(() => {
+        navigate('/cart');
+      }, 8000); // Delay the redirection to the cart page by 9 seconds
     } catch (error) {
       console.error('Error adding item to cart:', error);
-      toast.error('Error adding item to cart', { delay: 9000 }); // Show error toast with 9-second delay
+      toast.error('Error adding item to cart');
     }
   };
 

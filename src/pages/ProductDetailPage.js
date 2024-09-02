@@ -151,7 +151,7 @@ function ProductDetailPage() {
       <div className="tab-content">
         <div className="tab-pane active mb-4">
           <h2 className="text-lg font-semibold mb-2">Description</h2>
-          <p className='description'>{product.description}</p>
+          <p className="description">{product.description}</p>
         </div>
         <div className="tab-pane mb-4">
           <h2 className="text-lg font-semibold mb-2">Price</h2>

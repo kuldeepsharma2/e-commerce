@@ -37,3 +37,15 @@
   }
 }
 
+.description {
+    white-space: pre-wrap; /* Ensures that line breaks are respected */
+}
+
+.description::after {
+    content: '\A'; /* Adds a new line */
+    white-space: pre; /* Respects line breaks */
+}
+
+.description br {
+    content: '\A'; /* Adds a line break */
+}

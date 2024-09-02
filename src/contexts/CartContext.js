@@ -42,7 +42,12 @@ export const CartProvider = ({ children }) => {
       const cartData = cartDoc.data();
 
       let updatedCart = [];
-      let updatedItem = { ...item, timestamp: new Date().toISOString() };
+      let updatedItem = { 
+        ...item, 
+        timestamp: new Date().toISOString(),
+        duration: item.duration || null, // Ensure duration is saved
+        createdAt: item.createdAt || new Date().toISOString(), // Ensure createdAt is saved
+      };
 
       if (cartData) {
         updatedCart = Object.values(cartData);
@@ -52,11 +57,19 @@ export const CartProvider = ({ children }) => {
           updatedCart[existingItemIndex].quantity += item.quantity;
           updatedCart[existingItemIndex].totalAmount = updatedCart[existingItemIndex].quantity * item.price;
           updatedCart[existingItemIndex].timestamp = updatedItem.timestamp;
+          updatedCart[existingItemIndex].duration = updatedItem.duration; // Update duration
+          updatedCart[existingItemIndex].createdAt = updatedItem.createdAt; // Update createdAt
         } else {
-          updatedCart.push({ ...updatedItem, totalAmount: item.quantity * item.price });
+          updatedCart.push({ 
+            ...updatedItem, 
+            totalAmount: item.quantity * item.price 
+          });
         }
       } else {
-        updatedCart = [{ ...updatedItem, totalAmount: item.quantity * item.price }];
+        updatedCart = [{ 
+          ...updatedItem, 
+          totalAmount: item.quantity * item.price 
+        }];
       }
 
       const cartObject = updatedCart.reduce((acc, cartItem, index) => {

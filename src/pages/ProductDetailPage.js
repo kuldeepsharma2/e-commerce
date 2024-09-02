@@ -66,8 +66,7 @@ function ProductDetailPage() {
       const cartRef = doc(db, 'carts', user.uid);
       const cartDoc = await getDoc(cartRef);
       const cartData = cartDoc.data() || {};
-      
-      // Updated: Adding timestamp to cartItemId for uniqueness
+
       const cartItemId = `cart_${product.id}_${new Date().getTime()}`;
 
       if (cartData[cartItemId]) {
@@ -140,55 +139,69 @@ function ProductDetailPage() {
         <img
           src={product.image}
           alt={product.title}
-          className="w-full h-auto object-contain mb-4 rounded-md"
+          className="w-full h-auto object-cover mb-4 rounded-md"
         />
       )}
-      <div className="tabs mb-4">
-        <button className="tab-button w-full sm:w-auto">Specifications</button>
-        <button className="tab-button w-full sm:w-auto">Price</button>
-        <button className="tab-button w-full sm:w-auto">Reviews</button>
-      </div>
-      <div className="tab-content">
-        <div className="tab-pane active mb-4">
-          <h2 className="text-lg font-semibold mb-2">Specifications</h2>
-          <p>{product.specifications}</p>
+      <div className="mb-4">
+        <div className="flex flex-wrap -mx-2">
+          <button className="tab-button w-full sm:w-1/3 px-2 py-1 text-center border border-gray-300 rounded-md bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+            Specifications
+          </button>
+          <button className="tab-button w-full sm:w-1/3 px-2 py-1 text-center border border-gray-300 rounded-md bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+            Price
+          </button>
+          <button className="tab-button w-full sm:w-1/3 px-2 py-1 text-center border border-gray-300 rounded-md bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+            Reviews
+          </button>
         </div>
-        <div className="tab-pane mb-4">
-          <h2 className="text-lg font-semibold mb-2">Price</h2>
-          <p className="text-green-600 text-xl font-bold">${product.price}</p>
-        </div>
-        <div className="tab-pane">
-          <h2 className="text-lg font-semibold mb-2">Reviews</h2>
-          {reviews.length > 0 ? (
-            <ul className="space-y-2">
-              {reviews.map((review, index) => (
-                <li key={index} className="review-item bg-gray-100 p-4 rounded-md">
-                  <p><strong>{review.userEmail}:</strong> {review.review}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No reviews yet.</p>
-          )}
-          {user && (
-            <form onSubmit={handleReviewSubmit} className="review-form mt-4">
-              <textarea
-                value={review}
-                onChange={(e) => setReview(e.target.value)}
-                placeholder="Write your review here"
-                required
-                className="border p-2 w-full rounded-md"
-              />
-              <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2 w-full sm:w-auto">
-                Submit Review
-              </button>
-            </form>
-          )}
+        <div className="tab-content mt-4">
+          <div className="tab-pane active mb-4">
+            <h2 className="text-lg font-semibold mb-2">Specifications</h2>
+            <p dangerouslySetInnerHTML={{ __html: product.specifications.replace(/\n/g, '<br />') }} />
+            {product.instructor && <p><strong>Instructor:</strong> {product.instructor}</p>}
+            {product.enrollmentStatus && <p><strong>Enrollment Status:</strong> {product.enrollmentStatus}</p>}
+            {product.schedule && <p><strong>Schedule:</strong> {product.schedule}</p>}
+            {product.location && <p><strong>Location:</strong> {product.location}</p>}
+            {product.tags && <p><strong>Tags:</strong> {product.tags.join(', ')}</p>}
+            {product.category && <p><strong>Category:</strong> {product.category}</p>}
+          </div>
+          <div className="tab-pane mb-4">
+            <h2 className="text-lg font-semibold mb-2">Price</h2>
+            <p className="text-green-600 text-xl font-bold">${product.price}</p>
+          </div>
+          <div className="tab-pane">
+            <h2 className="text-lg font-semibold mb-2">Reviews</h2>
+            {reviews.length > 0 ? (
+              <ul className="space-y-2">
+                {reviews.map((review, index) => (
+                  <li key={index} className="review-item bg-gray-100 p-4 rounded-md">
+                    <p><strong>{review.userEmail}:</strong> {review.review}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No reviews yet.</p>
+            )}
+            {user && (
+              <form onSubmit={handleReviewSubmit} className="review-form mt-4">
+                <textarea
+                  value={review}
+                  onChange={(e) => setReview(e.target.value)}
+                  placeholder="Write your review here"
+                  required
+                  className="border p-2 w-full rounded-md"
+                />
+                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2 w-full sm:w-auto">
+                  Submit Review
+                </button>
+              </form>
+            )}
+          </div>
         </div>
       </div>
       <div className="mt-4">
-        <div className="flex justify-center">
-          <div className="text-center">
+        <div className="flex flex-wrap justify-center gap-4">
+          <div className="text-center w-full sm:w-1/2 lg:w-1/3">
             <label htmlFor="quantity" className="block text-lg font-semibold mb-2">Quantity:</label>
             <input
               id="quantity"
@@ -196,7 +209,7 @@ function ProductDetailPage() {
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
               min="1"
-              className="border p-2 w-full sm:w-20 rounded-md"
+              className="border p-2 w-full sm:w-32 rounded-md"
             />
             <div className="mt-4">
               <button

@@ -91,6 +91,8 @@ function CartPage() {
           productId: item.id, // Add the productId to the purchased product data
           buyProductVisibleStatus: true, // Add the buyProductVisibleStatus field
           ...item,
+          duration: item.duration || null, // Ensure duration is saved
+          createdAt: item.createdAt || new Date().toISOString(), // Ensure createdAt is saved
           timestamp: new Date().toISOString(),
         });
       });

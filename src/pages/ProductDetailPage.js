@@ -66,30 +66,34 @@ function ProductDetailPage() {
       const cartRef = doc(db, 'carts', user.uid);
       const cartDoc = await getDoc(cartRef);
       const cartData = cartDoc.data() || {};
-      const cartItemId = `cart_${product.id}_${user.uid}`;
+      
+      // Updated: Adding timestamp to cartItemId for uniqueness
+      const cartItemId = `cart_${product.id}_${new Date().getTime()}`;
 
       if (cartData[cartItemId]) {
         const updatedQuantity = (cartData[cartItemId].quantity || 0) + quantity;
         await setDoc(cartRef, {
           [cartItemId]: {
-            ...cartData[cartItemId],
+            ...product,
             quantity: updatedQuantity,
+            cartItemId: cartItemId,
           },
         }, { merge: true });
       } else {
         await setDoc(cartRef, {
           [cartItemId]: {
             ...product,
-            quantity,
-            cartItemId,
+            quantity: quantity,
+            cartItemId: cartItemId,
           },
         }, { merge: true });
       }
 
-      toast.success('Item added to cart!');
+      toast.success('Item added to cart!'); // Show success toast immediately
+
       setTimeout(() => {
         navigate('/cart');
-      }, 7000);
+      }, 8000); // Delay the redirection to the cart page by 8 seconds
     } catch (error) {
       console.error('Error adding item to cart:', error);
       toast.error('Failed to add item to cart.');

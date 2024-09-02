@@ -24,8 +24,16 @@ const HistoryDashboardPage = () => {
           const data = doc.data();
           return {
             ...data,
-            duration: data.duration ? data.duration.toDate().toISOString() : null, // Convert Timestamp to ISO string
-            createdAt: data.createdAt ? data.createdAt.toDate().toISOString() : null, // Ensure all Timestamps are converted
+            duration: data.duration && data.duration.toDate 
+              ? data.duration.toDate().toISOString() 
+              : typeof data.duration === 'string' 
+              ? data.duration 
+              : null, // Handle duration field
+            createdAt: data.createdAt && data.createdAt.toDate 
+              ? data.createdAt.toDate().toISOString() 
+              : typeof data.createdAt === 'string' 
+              ? data.createdAt 
+              : null, // Handle createdAt field
           };
         });
         dispatch(setEnrolledProducts(products));
